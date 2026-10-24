@@ -1,0 +1,27 @@
+# Data (mounted as volume at runtime)
+data/
+workspace/
+
+# Git
+.git/
+.gitignore
+
+# IDE / OS
+.vscode/
+.idea/
+*.pyc
+__pycache__/
+.virtual_documents/
+
+# Docker
+docker/
+docker-compose.yml
+
+# Misc
+*.zip
+*.pdf
+images/
+notebooks/
+docs/
+GEMINI.md
+CLAUDE.md
