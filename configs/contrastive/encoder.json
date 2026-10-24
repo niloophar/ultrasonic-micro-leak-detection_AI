@@ -1,0 +1,218 @@
+{
+  "_comment_purpose": "Contrastive encoder config (Ansatz A: Single Encoder + SupConLoss over all series). Recycles CNNAutoEncoder from anomaly_detection + adds projection head for SupCon loss.",
+  "_comment_variant_axes": "Four fields define a variant and must be edited together when switching: (1) encoder_type \u2014 autoencoder vs classifier auxiliary head; (2) selected_features \u2014 feature group (G5 raw / G6 diff / G7 echo / G8 TC); (3) output_root \u2014 artefact folder, keep per variant to avoid overwrite; (4) study_name \u2014 Optuna SQLite study, also per variant.",
+  "_comment_output_root": "Schema: ./contrastive_g<N>_<ae|clf>. One folder per (feature_group, encoder_type).",
+  "output_root": "./contrastive_g5_clf",
+  "data_root": "./prepared",
+  "_comment_encoder_type": "'autoencoder' = MSE reconstruction + SupCon; 'classifier' = CE cross-entropy + SupCon. Both use the same CNN encoder + projection head; they differ only in auxiliary head and loss.",
+  "encoder_type": "classifier",
+  "_comment_contrastive_loss": "Which contrastive loss rides on top of the auxiliary head: 'supcon' (class-based, discrete labels), 'rnc' (Rank-N-Contrast on a continuous target \u2014 see rnc_target), 'both' (weighted sum), or 'none'. RNC requires processed CSVs for per-series target lookup.",
+  "contrastive_loss": "supcon",
+  "_comment_rnc_target": "Continuous per-series target for RNC. 'temp_pipe' (recommended) = mean pipe temperature over noflow+equilibrium+valid rows. 'temp_amb' / 'temp_diff' analogous; 'series_index' is the ordinal fallback.",
+  "rnc_target": "temp_pipe",
+  "rnc_similarity": "cosine",
+  "_comment_study_name": "Optuna study name. Pair with output_root (same suffix) so separate variants produce independent SQLite studies.",
+  "study_name": "contrastive_g5_clf",
+  "_comment_arch": "Two backbone axes: encoder_arch selects CNN vs Transformer; encoder_type selects AE vs Classifier aux head. CNN stays at AD baseline for comparability; Transformer is the new parallel variant. Only SupCon/latent/batch hyperparams are tuned for CNN; transformer adds d_model/num_heads/num_layers/ff_dim/transformer_dropout to the search space.",
+  "encoder_arch": "cnn",
+  "cnn_channels": [
+    32,
+    64,
+    128
+  ],
+  "cnn_kernel_size": 3,
+  "_comment_transformer": "Transformer-specific defaults (used when encoder_arch='transformer'). Override per run via CLI or Optuna. num_heads must divide d_model \u2014 all defaults in d_model=[64,128,256] \u00d7 num_heads=[2,4,8] satisfy this.",
+  "d_model": 128,
+  "num_heads": 4,
+  "num_layers": 4,
+  "ff_dim": 256,
+  "transformer_dropout": 0.1,
+  "_comment_cnn_channel_mode": "'dual' splits features as up|down. Only meaningful when the feature set is symmetric up/down. For G9 (all already combined) use 'single'. Override per run with --cnn-channel-mode.",
+  "cnn_channel_mode": "dual",
+  "dropout": 0.3,
+  "scaler": "standard",
+  "_comment_features": "Select feature group by replacing the list below. Presets: Gruppe 5 = norm_interval_up/down_0..8 (18 raw); Gruppe 6 = norm_interval_diff_0..8 (9 diff); Gruppe 7 = echo_ratio_0..8 (9 echo); Gruppe 8 = norm_interval_up/down_0..8_tc (18 TC).",
+  "selected_features": [
+    "norm_interval_down_0",
+    "norm_interval_down_1",
+    "norm_interval_down_2",
+    "norm_interval_down_3",
+    "norm_interval_down_4",
+    "norm_interval_down_5",
+    "norm_interval_down_6",
+    "norm_interval_down_7",
+    "norm_interval_down_8",
+    "norm_interval_up_0",
+    "norm_interval_up_1",
+    "norm_interval_up_2",
+    "norm_interval_up_3",
+    "norm_interval_up_4",
+    "norm_interval_up_5",
+    "norm_interval_up_6",
+    "norm_interval_up_7",
+    "norm_interval_up_8"
+  ],
+  "_comment_supcon": "Defaults used when NOT running Optuna tune. tune overrides these. lambda_rnc / rnc_temperature only have effect when contrastive_loss includes 'rnc'. lambda_deepsad / deepsad_margin / deepsad_repulsion_weight only have effect when contrastive_loss='deepsad'.",
+  "latent_dim": 32,
+  "projection_dim": 64,
+  "lambda_supcon": 0.5,
+  "supcon_temperature": 0.1,
+  "lambda_rnc": 0.5,
+  "rnc_temperature": 2.0,
+  "_comment_deepsad": "DeepSAD loss defaults. lambda_deepsad = outer weight multiplying L_deepsad in the total loss. deepsad_margin = inner sphere radius m (distances in [0,4] for L2-normalised z_proj). deepsad_repulsion_weight = inner λ on L_repulse (not tuned by Optuna; fixed at 1.0).",
+  "lambda_deepsad": 1.0,
+  "deepsad_margin": 1.0,
+  "deepsad_repulsion_weight": 1.0,
+  "lr": 0.001,
+  "batch_size": 64,
+  "k_per_series": 16,
+  "epochs": 80,
+  "patience": 15,
+  "_comment_optuna": "Search space for --run tune. 200 trials recommended.",
+  "optuna_n_trials": 200,
+  "optuna_n_startup_trials": 20,
+  "optuna_warmup_steps": 15,
+  "optuna_search_space": {
+    "latent_dim": [
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "k_per_series": [
+      4,
+      8,
+      16,
+      32
+    ],
+    "projection_dim": [
+      32,
+      64,
+      128
+    ],
+    "lambda_supcon": [
+      0.05,
+      5.0
+    ],
+    "supcon_temperature": [
+      0.03,
+      0.5
+    ],
+    "lambda_rnc": [
+      0.05,
+      5.0
+    ],
+    "rnc_temperature": [
+      0.5,
+      8.0
+    ],
+    "lr": [
+      0.0001,
+      0.005
+    ],
+    "_comment_transformer_search": "Sampled only when encoder_arch='transformer'. num_heads=[2,4,8] all divide d_model=[64,128,256]; a runtime guard in train.py re-selects if divisibility fails.",
+    "d_model": [
+      64,
+      128,
+      256
+    ],
+    "num_layers": [
+      2,
+      4,
+      6
+    ],
+    "num_heads": [
+      2,
+      4,
+      8
+    ],
+    "ff_dim": [
+      128,
+      256,
+      512
+    ],
+    "transformer_dropout": [
+      0.05,
+      0.3
+    ],
+    "warmup_epochs": [
+      5,
+      10,
+      20
+    ],
+    "_comment_deepsad_search": "Tuned when contrastive_loss='deepsad'. lambda_deepsad log-sampled; deepsad_margin linear. deepsad_repulsion_weight is NOT tuned (fixed at deepsad_repulsion_weight above).",
+    "lambda_deepsad": [
+      0.05,
+      5.0
+    ],
+    "deepsad_margin": [
+      0.3,
+      1.5
+    ]
+  },
+  "_comment_eval": "Test series used as Optuna target (research setting - generalization to spring drift is the research question). NOTE: this field is currently documentation-only \u2014 actual test assignment comes from splits.json (configs/preparation/splitting.json). Keep in sync. Final LOSO rotates all 8 series.",
+  "test_series": [
+    "7.03.2026",
+    "15.03.2026",
+    "5.04.2026",
+    "11.04.2026",
+    "18.04.2026",
+    "ha-25.04.2026",
+    "hb-26.04.2026",
+    "ha-17.05.2026"
+  ],
+  "_comment_split_overrides": "Decouple encoder training from GMM eval. Both default to splits.json's train_series/test_series. Set encoder_train_series and gmm_eval_series to null (or omit) for legacy behaviour. Override via CLI: --encoder-train-series, --gmm-eval-series. See CLAUDE.md \u00a7'Eval recipes'.",
+  "encoder_train_series": null,
+  "gmm_eval_series": null,
+  "_comment_gmm_eval_mode": "GMM strategy. 'per_series' fits a fresh GMM per eval series on that site's own NoFlow (optimistic, recalibration assumed). 'global' fits ONE GMM on encoder-train NoFlow latents and scores all eval series with it (pessimistic, no recalibration \u2014 deployment-realistic). 'global_conditional' fits a linear regression z~T_pipe on train NoFlow + GMM on residuals (embeds drift model into scoring; tests linear-extrapolation of NoFlow centroid). 'both' = per_series + global. 'all' = all three. Override via CLI: --gmm-eval-mode.",
+  "gmm_eval_mode": "per_series",
+  "_comment_gmm_temp_target": "Temperature signal used by global_conditional GMM. 'temp_pipe' is the strongest predictor per drift analysis (Spearman 0.95). Override via CLI: --gmm-temp-target.",
+  "gmm_temp_target": "temp_pipe",
+  "_comment_loso": "All Haus A series excluding 30.03 (estimated labels, not trusted). ha-24.05 is confirmed NoFlow-only (0 leakage + 6 no_leakage) \u2014 contributes training data for other folds but is skipped in the AUC aggregate when held out. ha-20.06 was NoFlow-only before the 2026-07-09 label fix (06_18/06_20 corrected to leakage per data/raw/descriptions/ha-20.06.2026.txt) and is now AUC-computable (2 leakage + 2 no_leakage). ha-9.05 labels remain disputed (see git history \u2014 flagged 'possibly corrupted', processed:true skip) and have no processed/prepared data as of this writing, so it contributes nothing to any fold until resolved. All hb- series excluded \u2014 separate drift axis.",
+  "loso_series": [
+    "10.01.2026",
+    "24.01.2026",
+    "7.02.2026",
+    "21.02.2026",
+    "7.03.2026",
+    "15.03.2026",
+    "5.04.2026",
+    "11.04.2026",
+    "18.04.2026",
+    "ha-25.04.2026",
+    "ha-2.05.2026",
+    "ha-9.05.2026",
+    "ha-17.05.2026",
+    "ha-24.05.2026",
+    "ha-6.06.2026",
+    "ha-2.06.2026",
+    "ha-20.06.2026"
+  ],
+  "_comment_chrono": "chrono_extrap / chrono_extrap_temp / chrono_extrap_pooled: walk-forward chronological extrapolation, NOT leave-one-out. Uses chrono_series below (NOT loso_series) because order matters here and loso_series has a bug: ha-6.06.2026 (Jun 3-6) is listed BEFORE ha-2.06.2026 (Jun 1-2), which is backwards. Harmless for LOSO (order-independent, every fold's pool is 'all others' regardless of order) but silently mislabeled two splits in the first chrono_extrap run (2026-07-12, results/chronological_extrapolation) before this was caught on 2026-07-13. chrono_series here is the corrected order. For each split index k from chrono_min_train to len(chrono_series)-1: train on chrono_series[0:k]; chrono_extrap/chrono_extrap_temp test on the single next series chrono_series[k], chrono_extrap_pooled tests on ALL remaining series chrono_series[k:] pooled together (matches the supervisor's sketch: train 1-4/test 5-9, train 1-5/test 6-9, ...). Override the starting window via --chrono-min-train, or run a subset via --chrono-test-series.",
+  "chrono_series": [
+    "10.01.2026",
+    "24.01.2026",
+    "7.02.2026",
+    "21.02.2026",
+    "7.03.2026",
+    "15.03.2026",
+    "5.04.2026",
+    "11.04.2026",
+    "18.04.2026",
+    "ha-25.04.2026",
+    "ha-2.05.2026",
+    "ha-9.05.2026",
+    "ha-17.05.2026",
+    "ha-24.05.2026",
+    "ha-2.06.2026",
+    "ha-6.06.2026",
+    "ha-20.06.2026"
+  ],
+  "chrono_min_train": 4,
+  "_comment_gmm": "Anomaly scoring in latent space. Fit on held-out NoFlow only (deployment simulation).",
+  "gmm_n_components": 1,
+  "gmm_covariance_type": "full",
+  "_comment_checkpoints": "Keep top-N trial weights for later ablation.",
+  "keep_top_n_checkpoints": 3
+}

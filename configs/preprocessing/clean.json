@@ -1,0 +1,130 @@
+{
+  "processed_root": "./processed",
+  "value_col": "t_up_0 in ps",
+  "time_col": "Time",
+  "global_outlier": {
+    "z_low": -4.0,
+    "z_high": 5.0
+  },
+  "local_outlier": {
+    "block_size": 64,
+    "min_run_blocks": 50,
+    "step_up_quantile": 0.99,
+    "smooth_window_blocks": 21,
+    "k_block": 4.0,
+    "k_point": 3.5,
+    "center_smooth": true
+  },
+  "drift_plot": {
+    "enabled": true,
+    "value_col": "t_up_0 in ps",
+    "block_size": 512,
+    "fit_degree": 3
+  },
+  "series": [
+    {
+      "name": "10.01.2026",
+      "processed": true
+    },
+    {
+      "name": "24.01.2026",
+      "processed": true
+    },
+    {
+      "name": "7.02.2026",
+      "processed": true
+    },
+    {
+      "name": "21.02.2026",
+      "processed": true
+    },
+    {
+      "name": "7.03.2026",
+      "processed": true
+    },
+    {
+      "name": "15.03.2026",
+      "processed": true
+    },
+    {
+      "name": "30.03.2026",
+      "processed": true
+    },
+    {
+      "name": "5.04.2026",
+      "processed": true
+    },
+    {
+      "name": "11.04.2026",
+      "processed": true
+    },
+    {
+      "name": "18.04.2026",
+      "processed": true
+    },
+    {
+      "name": "ha-25.04.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-26.04.2026",
+      "processed": false
+    },
+    {
+      "name": "ha-2.05.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-4.05.2026",
+      "processed": false
+    },
+    {
+      "name": "ha-9.05.2026",
+      "processed": true
+    },
+    {
+      "name": "ha-17.05.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-10.05.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-17.05.2026",
+      "processed": false
+    },
+    {
+      "name": "ha-24.05.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-25.05.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-31.05.2026",
+      "processed": false
+    },
+    {
+      "name": "ha-6.06.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-7.06.2026",
+      "processed": false
+    },
+    {
+      "name": "ha-2.06.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-14.06.2026",
+      "processed": false
+    },
+    {
+      "name": "ha-20.06.2026",
+      "processed": false
+    }
+  ]
+}

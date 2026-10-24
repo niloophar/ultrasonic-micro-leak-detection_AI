@@ -1,0 +1,37 @@
+{
+  "output_root": "./prepared",
+  "_comment_setup": "Winter\u2192Spring held-out setup for Optuna tuning / deployment simulation. train_series = four winter dates (80% train / 20% val). test_series = five spring-drift dates (7.03, 15.03, 5.04, 11.04, 18.04) \u2014 fully held out from the encoder, used as the Optuna objective. Mirrors test_series in configs/contrastive/encoder.json.",
+  "_comment_reset_instructions": "To revert to the production encoder setup (all series in train_series, stratified 80/15/5), move all series into train_series, set test_series=[], and add test_fraction=0.05.",
+  "train_series": [
+    "10.01.2026",
+    "24.01.2026",
+    "7.02.2026",
+    "21.02.2026"
+  ],
+  "_comment_new_series": "ha-25.04.2026 (Haus A, has leakage) and hb-26.04.2026 (Haus B, NO leakage files \u2014 AUC undefined, only NoFlow OOD reference) added to test_series so they stay out of encoder training. Cross-house mixing into train_series is a separate experiment (see CLAUDE.md \u00a7'Waiting for More Data' priority 3).",
+  "test_series": [
+    "7.03.2026",
+    "15.03.2026",
+    "5.04.2026",
+    "11.04.2026",
+    "18.04.2026",
+    "ha-25.04.2026",
+    "hb-26.04.2026",
+    "ha-2.05.2026",
+    "hb-4.05.2026",
+    "ha-9.05.2026",
+    "ha-17.05.2026",
+    "hb-10.05.2026",
+    "hb-17.05.2026",
+    "ha-24.05.2026",
+    "hb-25.05.2026",
+    "hb-31.05.2026",
+    "ha-6.06.2026",
+    "hb-7.06.2026",
+    "ha-2.06.2026",
+    "hb-14.06.2026",
+    "ha-20.06.2026"
+  ],
+  "val_fraction": 0.2,
+  "seed": 42
+}

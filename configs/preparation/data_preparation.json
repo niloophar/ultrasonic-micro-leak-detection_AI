@@ -1,0 +1,24 @@
+{
+  "output_root": "./prepared",
+  "patch": {
+    "enabled": true,
+    "downsample_factor": 16,
+    "patch_width": 64,
+    "patch_overlap": 0.75,
+    "centering": "none",
+    "scaling_mode": "none",
+    "prepared_dir": "prepared",
+    "downsample_stats": [
+      "mean",
+      "std"
+    ],
+    "noflow_time_filter": {
+      "enabled": true,
+      "start_hour": 0,
+      "end_hour": 5
+    }
+  },
+  "timeseries": {
+    "enabled": false
+  }
+}

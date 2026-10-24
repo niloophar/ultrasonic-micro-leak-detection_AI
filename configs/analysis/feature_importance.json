@@ -1,0 +1,5 @@
+{
+  "top_n": 10,
+  "n_repeats": 5,
+  "compute_all_series": true
+}

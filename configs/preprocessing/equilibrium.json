@@ -1,0 +1,128 @@
+{
+  "processed_root": "./processed",
+  "value_col": "t_up_0 in ps",
+  "time_col": "Time",
+  "block_size": 64,
+  "_comment_detection": "Sliding window parameters for equilibrium detection:",
+  "window_length": 250,
+  "hop_size": 50,
+  "slope_threshold": 0.75,
+  "_comment_residuals": "Max RMSE of linear fit (in ps). Rejects windows spanning jumps despite low slope. null=disabled:",
+  "residuals_filter_enabled": true,
+  "max_rmse": 1000,
+  "min_segment_length": 50,
+  "_comment_gap": "Bridge gaps of <= max_gap_blocks non-eq blocks between eq regions (0=disabled):",
+  "max_gap_blocks": 3,
+  "_comment_adaptive": "Adaptive mode: use std_err from linregress instead of fixed threshold:",
+  "adaptive": false,
+  "adaptive_factor": 2.0,
+  "plotting": {
+    "enabled": true
+  },
+  "series": [
+    {
+      "name": "10.01.2026",
+      "processed": true
+    },
+    {
+      "name": "24.01.2026",
+      "processed": true
+    },
+    {
+      "name": "7.02.2026",
+      "processed": true
+    },
+    {
+      "name": "21.02.2026",
+      "processed": true
+    },
+    {
+      "name": "7.03.2026",
+      "processed": true
+    },
+    {
+      "name": "15.03.2026",
+      "processed": true
+    },
+    {
+      "name": "30.03.2026",
+      "processed": true
+    },
+    {
+      "name": "5.04.2026",
+      "processed": true
+    },
+    {
+      "name": "11.04.2026",
+      "processed": true
+    },
+    {
+      "name": "18.04.2026",
+      "processed": true
+    },
+    {
+      "name": "ha-25.04.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-26.04.2026",
+      "processed": false
+    },
+    {
+      "name": "ha-2.05.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-4.05.2026",
+      "processed": false
+    },
+    {
+      "name": "ha-9.05.2026",
+      "processed": true
+    },
+    {
+      "name": "ha-17.05.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-10.05.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-17.05.2026",
+      "processed": false
+    },
+    {
+      "name": "ha-24.05.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-25.05.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-31.05.2026",
+      "processed": false
+    },
+    {
+      "name": "ha-6.06.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-7.06.2026",
+      "processed": false
+    },
+    {
+      "name": "ha-2.06.2026",
+      "processed": false
+    },
+    {
+      "name": "hb-14.06.2026",
+      "processed": false
+    },
+    {
+      "name": "ha-20.06.2026",
+      "processed": false
+    }
+  ]
+}

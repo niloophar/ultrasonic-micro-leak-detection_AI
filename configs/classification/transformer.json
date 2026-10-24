@@ -1,0 +1,30 @@
+{
+  "output_root": "./prepared",
+  "transformer_variant": "B",
+  "d_model": 64,
+  "n_heads": 4,
+  "n_layers": 2,
+  "d_ff": 128,
+  "dropout": 0.3,
+  "lr": 0.001,
+  "batch_size": 32,
+  "epochs": 100,
+  "patience": 10,
+  "scaler": "standard",
+  "pos_weight": "auto",
+  "selected_features": [
+    "norm_interval_down_0",
+    "norm_interval_down_3",
+    "norm_interval_down_6",
+    "norm_interval_up_0",
+    "norm_interval_up_3",
+    "norm_interval_up_6"
+  ],
+  "prepared_dir": "prepared",
+  "adaptive_threshold": {
+    "enabled": false,
+    "method": "gaussian",
+    "percentile": 95.0,
+    "std_multiplier": 2.0
+  }
+}

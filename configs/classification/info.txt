@@ -1,0 +1,101 @@
+========================================
+Feature Engineering Findings
+========================================
+
+Signal Model:
+  t_up_i  = a(T) * (tau_i + delta_i) + b_up(T)
+  t_down_i = a(T) * (tau_i - delta_i) + b_down(T)
+  where a(T) = temperature-dependent scale, b(T) = offset, delta_i = flow shift at echo i
+
+Feature Temperature Invariance:
+  - Group 1 (intervals): cancel b(T), but a(T) remains -> temperature-dependent
+  - Group 2 (runtime_diff): cancel b(T), but a(T) remains
+  - Group 3 (normalized_period_asymmetry): cancels both a(T) and b(T)
+  - Group 5 (norm_interval): cancels both a(T) and b(T), dimensionless fractions
+  - Group 6 (norm_interval_diff): cancels a(T) and b(T), AND removes geometric background
+
+Key Finding: norm_interval_up_3 is the dominant feature
+  - 67.6% gain importance in XGBoost
+  - Positive permutation importance on BOTH test series (0.154 on 15.02, 0.050 on 8.02)
+  - Physically: fractional contribution of 4th half-period interval to total cycle
+  - Interpretation: leak changes flow velocity, echo 3/4 show strongest differential effect
+
+norm_interval_diff Features (Group 6):
+  norm_interval_diff_i = norm_interval_up_i - norm_interval_down_i
+  = 2*(d_i*S - D_i*s) / (S^2 - s^2)
+  where D_i = geometric interval, d_i = flow shift difference, S/s = total sums
+  - Zero without flow, non-zero with flow
+  - Removes geometric background that dominates individual norm_interval values
+  - Directly isolates per-echo flow signature
+
+========================================
+Experiment Log
+========================================
+
+[2026-02-15] Baseline XGBoost (with Temp Ambient/Pipe, scale_pos_weight=auto=0.18):
+  - 8.02: Acc=95.2%, Recall=100%, F1=0.87
+  - 15.02: Acc=54.8%, Recall=0.6%, F1=0.01  (FAIL)
+  - Cause: Temp Ambient 8.6% gain -> model exploits temperature as proxy
+  - interval_down_7 positive importance on 8.02, NEGATIVE on 15.02
+
+[2026-02-15] Fix: remove Temp, add norm_intervals, scale_pos_weight=1.0:
+  - 8.02: Acc=95.2%, Recall=100%, F1=0.87  (unchanged)
+  - 15.02: Acc=83.8%, Recall=89.3%, F1=0.80  (massive improvement)
+  - norm_interval_up_3 now dominant (67.6% gain)
+  - Positive importance on both series -> generalizes
+
+[2026-02-15] With Temp features re-added (all raw + computed, scale_pos_weight=1.0):
+  XGBoost:
+  - 8.02: Acc=87.2%, Recall=100%, F1=0.72  (precision dropped 0.775->0.564)
+  - 15.02: Acc=86.2%, Recall=98.1%, F1=0.84  (recall improved 89.3%->98.1%)
+  - Trade-off: higher recall but more false positives on 8.02
+
+MLP Issues:
+  - pos_weight=0.18 (auto-computed, never corrected) -> systematically ignores leaks
+  - Loss=0.0 from epoch 10 -> complete memorization, no generalization
+  - 15.02: 0% recall despite ROC-AUC=1.0 -> scores separate perfectly, threshold wrong
+  - Fix needed: set pos_weight=1.0 or invert calculation
+
+[2026-02-15] MLP with pos_weight=1.0, Groups 5+6 only (27 features):
+  - 8.02: Acc=95.2%, Recall=100%, F1=0.87
+  - 15.02: Acc=76.2%, Recall=24.5%, F1=0.33  (insufficient)
+  - MLP memorizes training data, fails to generalize across temperature shifts
+  - Various tuning attempts (pos_weight 3-5, dropout 0.5, smaller network) did not help
+
+[2026-02-15] CNN (model_type=cnn, channels=[16,32], kernel_size=3, fc_dim=64):
+  Architecture: Conv2d(1,16,3)->BN->ReLU->Pool -> Conv2d(16,32,3)->BN->ReLU->AdaptivePool(1,1) -> FC(32,64)->ReLU->Dropout->FC(64,1)
+  Parameters: 7,073 (vs MLP 119,041)
+  Features: Groups 5+6 only (27 norm_interval + norm_interval_diff features)
+  Config: pos_weight=1.0, lr=0.001, batch_size=32, patch_width=32, downsample=64
+  Results:
+  - Overall: Acc=98.5%, Precision=95.5%, Recall=100%, F1=97.7%
+  - 8.02: Acc=95.2%, Recall=100%, F1=0.87 (same pattern as all models: 147 TN, 9 FP, 0 FN, 31 TP)
+  - 15.02: Acc=100%, Recall=100%, Precision=100%, F1=1.00  (PERFECT)
+  Key insight: CNN's inductive bias (weight sharing over local feature x time neighborhoods)
+    provides implicit regularization that prevents memorization.
+    MLP sees each position independently (119k params for 27x32=864 inputs),
+    CNN shares kernels across all positions (7k params), forcing it to learn
+    position-invariant patterns that generalize across temperature shifts.
+
+[2026-02-15] Per-Patch Centering Experiment (CNN, Groups 5+6, 27 features):
+  Tested centering modes: none, mean, zscore
+  - none:   Acc=98.5%, Recall=100%, F1=97.7% (baseline, see above)
+  - mean:   Acc=30.9%, Recall=100%, F1=47.3% — predicts everything as Leak
+  - zscore: Acc=30.9%, Recall=100%, F1=47.3% — predicts everything as Leak
+  Both mean and zscore: early stopping at epoch 11 (best=epoch 1), model never learns.
+  Cause: The selected features (norm_interval_diff, norm_interval_up/down) are already
+    temperature-invariant (cancel both a(T) and b(T)). Their absolute level IS the signal:
+    norm_interval_diff ~0 for NoFlow, non-zero for Flow. Subtracting the patch mean
+    removes exactly the discriminative information.
+  Conclusion: centering=none is correct for Group 5+6 features.
+  Note: centering could help for Group 1+2 features (interval, runtime_diff) where the
+    multiplicative factor a(T) still affects absolute levels. Not tested yet.
+
+========================================
+Recommended Metric
+========================================
+Primary: Recall (sensitivity) - missing a leak is worse than false alarm
+Secondary: Precision as constraint (>60%) - too many false alarms unusable
+Rationale: Majority vote over time windows filters false positives,
+  but missed leaks compound. 70% per-patch recall sufficient for
+  majority vote over ~10 patches (13 min) -> ~95% detection probability.

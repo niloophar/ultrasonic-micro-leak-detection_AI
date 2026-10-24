@@ -1,0 +1,25 @@
+{
+  "output_root": "./prepared",
+  "n_estimators": 300,
+  "max_depth": 6,
+  "learning_rate": 0.1,
+  "subsample": 0.8,
+  "colsample_bytree": 0.8,
+  "scale_pos_weight": "auto",
+  "eval_metric": "logloss",
+  "early_stopping_rounds": 20,
+  "selected_features": [
+    "echo_ratio_0_tc",
+    "echo_ratio_3_tc",
+    "echo_ratio_6_tc",
+    "norm_interval_diff_0_tc",
+    "norm_interval_diff_3_tc",
+    "period_ratio_tc"
+  ],
+  "adaptive_threshold": {
+    "enabled": false,
+    "method": "gaussian",
+    "percentile": 95.0,
+    "std_multiplier": 2.0
+  }
+}

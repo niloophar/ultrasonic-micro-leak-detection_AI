@@ -1,0 +1,43 @@
+{
+  "output_root": "./prepared",
+  "model_type": "cnn",
+  "hidden_dims": [
+    128,
+    64
+  ],
+  "cnn_channels": [
+    16,
+    32
+  ],
+  "cnn_kernel_size": 5,
+  "cnn_fc_dim": 64,
+  "cnn_channel_mode": "dual",
+  "dropout": 0.3,
+  "lr": 0.001,
+  "batch_size": 32,
+  "epochs": 100,
+  "patience": 10,
+  "scaler": "standard",
+  "pos_weight": 1.0,
+  "prepared_dir": "prepared",
+  "adaptive_threshold": {
+    "enabled": true,
+    "method": "gaussian",
+    "percentile": 95.0,
+    "std_multiplier": 2.0
+  },
+  "selected_features": [
+    "norm_interval_down_0",
+    "norm_interval_down_3",
+    "norm_interval_down_6",
+    "norm_interval_up_0",
+    "norm_interval_up_3",
+    "norm_interval_up_6"
+  ],
+  "dense_features": [
+    "Temp Ambient in °C",
+    "Temp Pipe in °C",
+    "normalized_period_asymmetry_tc",
+    "period_ratio_tc"
+  ]
+}
